@@ -1,44 +1,115 @@
-// src/app/page.tsx
-import PokemonCard from "@/components/PokemonCard";
-import Pagination from "@/components/Pagination";
+"use client";
+
+import { useState, useMemo } from "react";
+import PokemonSearch from "@/components/PokemonSearch";
+import PokemonCardNew from "@/components/PokemonCardNew";
+import PokemonDetailModal from "@/components/PokemonDetailModal";
 import { extractIdFromResourceUrl, getPokemonDetail, getPokemonList } from "@/lib/pokeapi";
+import { getPokemonNameInJapanese } from "@/lib/pokeapi";
+import type { PokemonDetail } from "@/lib/pokeapi";
+import { useEffect } from "react";
 
-// App Router の RSC。1時間に一度は再検証
-export const revalidate = 3600;
+export default function Page() {
+  const [pokemonList, setPokemonList] = useState<PokemonDetail[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetail | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-const DEFAULT_LIMIT = 24;
+  // Load pokemon data
+  useEffect(() => {
+    async function loadPokemon() {
+      try {
+        const list = await getPokemonList(24, 0);
+        const details = await Promise.all(
+          list.results.map(async (r) => {
+            const id = extractIdFromResourceUrl(r.url) ?? r.name;
+            return getPokemonDetail(id);
+          })
+        );
+        setPokemonList(details);
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to load pokemon:", error);
+        setLoading(false);
+      }
+    }
+    loadPokemon();
+  }, []);
 
-type SearchParams = { page?: string; limit?: string };
+  // Filter pokemon based on search query
+  const filteredPokemon = useMemo(() => {
+    if (!searchQuery) return pokemonList;
+    
+    return pokemonList.filter((pokemon) =>
+      getPokemonNameInJapanese(pokemon.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pokemon.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pokemon.id.toString().includes(searchQuery)
+    );
+  }, [pokemonList, searchQuery]);
 
-export default async function Page({ searchParams }: { searchParams: SearchParams }) {
-  const page = Math.max(1, Number(searchParams.page ?? 1));
-  const limit = Math.max(1, Math.min(60, Number(searchParams.limit ?? DEFAULT_LIMIT)));
-  const offset = (page - 1) * limit;
+  const handlePokemonClick = (pokemon: PokemonDetail) => {
+    setSelectedPokemon(pokemon);
+    setIsModalOpen(true);
+  };
 
-  // 1) name/url 一覧を取得
-  const list = await getPokemonList(limit, offset);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPokemon(null);
+  };
 
-  // 2) 必要なカード表示のための最小限の詳細を並列取得
-  // フェアユースの観点で limit は 24〜48 程度に留めるのが現実的
-  // 注意: 大量データ取得時はAPI rate limitやパフォーマンスに配慮が必要
-  // 本番環境では適切なエラーハンドリングとローディング状態の実装を推奨
-  const details = await Promise.all(
-    list.results.map(async (r) => {
-      // 名前で引くのが最も確実（URL から ID でもOK）
-      const id = extractIdFromResourceUrl(r.url) ?? r.name;
-      return getPokemonDetail(id);
-    })
-  );
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <PokemonSearch onSearch={setSearchQuery} />
+        <div className="p-4">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-gray-500">読み込み中...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <Pagination page={page} limit={limit} totalCount={list.count} />
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {details.map((p) => (
-          <PokemonCard key={p.id} p={p} />
-        ))}
+    <div className="min-h-screen bg-gray-50">
+      {/* Search Header */}
+      <PokemonSearch onSearch={setSearchQuery} />
+
+      {/* Pokemon List */}
+      <div className="p-4">
+        {filteredPokemon.length === 0 ? (
+          <div className="text-center py-20 text-gray-500">
+            {searchQuery ? "ポケモンが見つかりません" : "ポケモンデータがありません"}
+          </div>
+        ) : (
+          <div>
+            {/* Featured Pokemon (first one) */}
+            <PokemonCardNew
+              pokemon={filteredPokemon[0]}
+              onClick={() => handlePokemonClick(filteredPokemon[0])}
+            />
+
+            {/* Pokemon List */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 divide-y divide-gray-100">
+              {filteredPokemon.slice(1).map((pokemon) => (
+                <PokemonCardNew
+                  key={pokemon.id}
+                  pokemon={pokemon}
+                  onClick={() => handlePokemonClick(pokemon)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-      <Pagination page={page} limit={limit} totalCount={list.count} />
-    </>
+
+      {/* Detail Modal */}
+      <PokemonDetailModal
+        pokemon={selectedPokemon}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
+    </div>
   );
 }
