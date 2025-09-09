@@ -1,115 +1,200 @@
-"use client";
+import { useState, useEffect, useCallback } from "react";
+import { Input } from "../components/ui/input";
+import { ScrollArea } from "../components/ui/scroll-area";
+import { PokemonListItem } from "../components/PokemonListItem";
+import { PokemonHeroDisplay } from "../components/PokemonHeroDisplay";
+import { PokemonDetailModal } from "../components/PokemonDetailModal";
+import { fetchPokemonList, fetchPokemonDetails, getPokemonIdFromUrl } from "../utils/pokemonApi";
+import { Pokemon, PokemonListResponse } from "../types/pokemon";
+import { Search, Menu, Filter, Loader2 } from "lucide-react";
+import { Button } from "../components/ui/button";
 
-import { useState, useMemo } from "react";
-import PokemonSearch from "@/components/PokemonSearch";
-import PokemonCardNew from "@/components/PokemonCardNew";
-import PokemonDetailModal from "@/components/PokemonDetailModal";
-import { extractIdFromResourceUrl, getPokemonDetail, getPokemonList } from "@/lib/pokeapi";
-import { getPokemonNameInJapanese } from "@/lib/pokeapi";
-import type { PokemonDetail } from "@/lib/pokeapi";
-import { useEffect } from "react";
-
-export default function Page() {
-  const [pokemonList, setPokemonList] = useState<PokemonDetail[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetail | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export function ModernPokedex() {
+  const [pokemonList, setPokemonList] = useState<PokemonListResponse | null>(null);
+  const [filteredPokemon, setFilteredPokemon] = useState<{name: string; url: string}[]>([]);
+  const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
+  const [selectedPokemonUrl, setSelectedPokemonUrl] = useState<string>("");
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
-  // Load pokemon data
-  useEffect(() => {
-    async function loadPokemon() {
-      try {
-        const list = await getPokemonList(24, 0);
-        const details = await Promise.all(
-          list.results.map(async (r) => {
-            const id = extractIdFromResourceUrl(r.url) ?? r.name;
-            return getPokemonDetail(id);
-          })
-        );
-        setPokemonList(details);
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to load pokemon:", error);
-        setLoading(false);
-      }
+  const handlePokemonSelect = useCallback(async (pokemonUrl: string) => {
+    try {
+      setLoadingDetail(true);
+      setSelectedPokemonUrl(pokemonUrl);
+      const pokemonId = getPokemonIdFromUrl(pokemonUrl);
+      const pokemonDetail = await fetchPokemonDetails(pokemonId);
+      setSelectedPokemon(pokemonDetail);
+    } catch (error) {
+      console.error('ポケモン詳細の取得に失敗しました:', error);
+    } finally {
+      setLoadingDetail(false);
     }
-    loadPokemon();
   }, []);
 
-  // Filter pokemon based on search query
-  const filteredPokemon = useMemo(() => {
-    if (!searchQuery) return pokemonList;
+  useEffect(() => {
+    loadPokemonList();
+  }, []);
+
+  useEffect(() => {
+    if (pokemonList) {
+      const filtered = pokemonList.results.filter(pokemon =>
+        pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredPokemon(filtered);
+      
+      // 最初のポケモンを自動選択（検索結果がある場合）
+      if (filtered.length > 0 && !selectedPokemon) {
+        handlePokemonSelect(filtered[0].url);
+      }
+    }
+  }, [pokemonList, searchTerm, selectedPokemon, handlePokemonSelect]);
+
+  const loadPokemonList = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchPokemonList(50); // より多くのポケモンを読み込み
+      setPokemonList(data);
+    } catch (error) {
+      console.error('ポケモンリストの取得に失敗しました:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInfoClick = () => {
+    setIsDetailModalOpen(true);
+  };
+
+  const loadMorePokemon = async () => {
+    if (!pokemonList) return;
     
-    return pokemonList.filter((pokemon) =>
-      getPokemonNameInJapanese(pokemon.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pokemon.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pokemon.id.toString().includes(searchQuery)
-    );
-  }, [pokemonList, searchQuery]);
-
-  const handlePokemonClick = (pokemon: PokemonDetail) => {
-    setSelectedPokemon(pokemon);
-    setIsModalOpen(true);
+    try {
+      setLoading(true);
+      const currentCount = pokemonList.results.length;
+      const newData = await fetchPokemonList(currentCount + 50);
+      setPokemonList(newData);
+    } catch (error) {
+      console.error('追加ポケモンの取得に失敗しました:', error);
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedPokemon(null);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <PokemonSearch onSearch={setSearchQuery} />
-        <div className="p-4">
-          <div className="flex items-center justify-center py-20">
-            <div className="text-gray-500">読み込み中...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Search Header */}
-      <PokemonSearch onSearch={setSearchQuery} />
-
-      {/* Pokemon List */}
-      <div className="p-4">
-        {filteredPokemon.length === 0 ? (
-          <div className="text-center py-20 text-gray-500">
-            {searchQuery ? "ポケモンが見つかりません" : "ポケモンデータがありません"}
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
+      {/* ヘッダー */}
+      <div className="bg-[#E53935] p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <Menu className="w-6 h-6 text-white" />
+            <h1 className="text-white text-xl">ポケモン図鑑</h1>
           </div>
-        ) : (
-          <div>
-            {/* Featured Pokemon (first one) */}
-            <PokemonCardNew
-              pokemon={filteredPokemon[0]}
-              onClick={() => handlePokemonClick(filteredPokemon[0])}
-            />
-
-            {/* Pokemon List */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 divide-y divide-gray-100">
-              {filteredPokemon.slice(1).map((pokemon) => (
-                <PokemonCardNew
-                  key={pokemon.id}
-                  pokemon={pokemon}
-                  onClick={() => handlePokemonClick(pokemon)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+          <Filter className="w-6 h-6 text-white" />
+        </div>
+        
+        {/* 検索バー */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
+          <Input
+            placeholder="ポケモンの名前を検索..."
+            value={searchTerm}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+            className="pl-10 bg-white/90 border-white text-gray-800 placeholder:text-gray-500"
+          />
+        </div>
       </div>
 
-      {/* Detail Modal */}
+      {/* メインコンテンツ */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* 上部: 選択中のポケモン表示 */}
+        <div className="h-1/2 relative overflow-hidden">
+          {loadingDetail ? (
+            <div className="flex items-center justify-center h-full bg-white">
+              <div className="text-center">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-600 mb-2 mx-auto" />
+                <p className="text-gray-500">読み込み中...</p>
+              </div>
+            </div>
+          ) : (
+            <PokemonHeroDisplay 
+              pokemon={selectedPokemon} 
+              onInfoClick={handleInfoClick}
+            />
+          )}
+        </div>
+
+        {/* 下部: ポケモンリスト */}
+        <div className="h-1/2 bg-white">
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <p className="text-gray-700">
+                {filteredPokemon.length}匹のポケモン
+              </p>
+              <span className="text-gray-500 text-sm">音順</span>
+            </div>
+          </div>
+          
+          <ScrollArea className="h-[calc(100%-60px)]">
+            <div className="p-4 space-y-1">
+              {loading && filteredPokemon.length === 0 ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-600" />
+                </div>
+              ) : (
+                <>
+                  {filteredPokemon.map((pokemon) => (
+                    <PokemonListItem
+                      key={pokemon.name}
+                      name={pokemon.name}
+                      url={pokemon.url}
+                      onClick={() => handlePokemonSelect(pokemon.url)}
+                      isSelected={selectedPokemonUrl === pokemon.url}
+                    />
+                  ))}
+                  
+                  {/* もっと読み込むボタン */}
+                  {pokemonList && pokemonList.results.length < 151 && (
+                    <div className="text-center pt-4">
+                      <Button 
+                        onClick={loadMorePokemon} 
+                        disabled={loading}
+                        className="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-300"
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            読み込み中...
+                          </>
+                        ) : (
+                          'もっと見る'
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {/* 検索結果なし */}
+              {filteredPokemon.length === 0 && !loading && searchTerm && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">「{searchTerm}」に一致するポケモンが見つかりませんでした。</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      </div>
+
+      {/* ポケモン詳細モーダル */}
       <PokemonDetailModal
         pokemon={selectedPokemon}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
       />
     </div>
   );
 }
+
+export default ModernPokedex;

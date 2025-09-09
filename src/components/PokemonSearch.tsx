@@ -1,26 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 
-interface PokemonSearchProps {
-  onSearch: (query: string) => void;
-}
+// interface PokemonSearchProps {
+//   onSearch: (query: string) => void;
+// }
 
-export default function PokemonSearch({ onSearch }: PokemonSearchProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    onSearch(value);
-  };
+export default function PokemonSearch() {
 
   return (
     <div className="bg-red-500 p-4">
       <div className="flex items-center gap-4">
         {/* Menu icon */}
-        <div className="text-white">
+        {/* <div className="text-white">
           <svg
             width="24"
             height="24"
@@ -29,19 +21,23 @@ export default function PokemonSearch({ onSearch }: PokemonSearchProps) {
             xmlns="http://www.w3.org/2000/svg"
             className="stroke-current"
           >
-            <path d="M3 6h18M3 12h18M3 18h18" strokeWidth="2" strokeLinecap="round"/>
+            <path
+              d="M3 6h18M3 12h18M3 18h18"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
           </svg>
-        </div>
+        </div> */}
 
         {/* Title */}
-        <h1 className="text-white text-lg font-bold flex-1">ポケモン図鑑</h1>
+        <h1 className="text-white text-lg font-bold flex-1">Pokédex</h1>
 
-        {/* Filter icon */}
-        <Filter className="text-white w-6 h-6" />
+        {/* Search icon */}
+        <Search className="text-white w-6 h-6" />
       </div>
 
       {/* Search bar */}
-      <div className="mt-4 relative">
+      {/* <div className="mt-4 relative">
         <Input
           type="text"
           placeholder="ポケモンの名前を検索..."
@@ -49,7 +45,7 @@ export default function PokemonSearch({ onSearch }: PokemonSearchProps) {
           onChange={(e) => handleSearchChange(e.target.value)}
           className="w-full bg-white rounded-lg pl-4 pr-10 py-3 text-gray-600 placeholder-gray-400 border-0"
         />
-      </div>
+      </div> */}
     </div>
   );
 }
