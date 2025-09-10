@@ -22,14 +22,9 @@ export function PokemonCard({ name, url, onClick }: PokemonCardProps) {
         <div className="relative mb-3">
           <ImageWithFallback
             src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`}
+            fallbackSrc={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`}
             alt={name}
             className="w-20 h-20 mx-auto object-contain"
-            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-              // フォールバック画像
-              (
-                e.target as HTMLImageElement
-              ).src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`;
-            }}
           />
         </div>
         <div className="space-y-2">

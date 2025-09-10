@@ -1,3 +1,5 @@
+"use client";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
@@ -34,12 +36,9 @@ export function PokemonDetailModal({
           <div className="text-center">
             <ImageWithFallback
               src={pokemon.sprites.other["official-artwork"].front_default}
+              fallbackSrc={pokemon.sprites.front_default}
               alt={pokemon.name}
               className="w-32 h-32 mx-auto object-contain"
-              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                (e.target as HTMLImageElement).src =
-                  pokemon.sprites.front_default;
-              }}
             />
           </div>
 

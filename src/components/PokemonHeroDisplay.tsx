@@ -32,11 +32,9 @@ export function PokemonHeroDisplay({ pokemon, onInfoClick }: PokemonHeroDisplayP
         <div className="w-48 h-48 mx-auto mb-4 rounded-full bg-gray-50 p-4 shadow-lg">
           <ImageWithFallback
             src={pokemon.sprites.other['official-artwork'].front_default}
+            fallbackSrc={pokemon.sprites.front_default}
             alt={pokemon.name}
             className="w-full h-full object-contain drop-shadow-2xl"
-            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-              (e.target as HTMLImageElement).src = pokemon.sprites.front_default;
-            }}
           />
         </div>
         

@@ -1,12 +1,13 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
-import { Input } from "../components/ui/input";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { PokemonListItem } from "../components/PokemonListItem";
 import { PokemonHeroDisplay } from "../components/PokemonHeroDisplay";
 import { PokemonDetailModal } from "../components/PokemonDetailModal";
 import { fetchPokemonList, fetchPokemonDetails, getPokemonIdFromUrl } from "../utils/pokemonApi";
 import { Pokemon, PokemonListResponse } from "../types/pokemon";
-import { Search, Menu, Filter, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
 export function ModernPokedex() {
@@ -43,7 +44,7 @@ export function ModernPokedex() {
         pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredPokemon(filtered);
-      
+
       // 最初のポケモンを自動選択（検索結果がある場合）
       if (filtered.length > 0 && !selectedPokemon) {
         handlePokemonSelect(filtered[0].url);
@@ -69,7 +70,7 @@ export function ModernPokedex() {
 
   const loadMorePokemon = async () => {
     if (!pokemonList) return;
-    
+
     try {
       setLoading(true);
       const currentCount = pokemonList.results.length;
@@ -84,28 +85,6 @@ export function ModernPokedex() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
-      {/* ヘッダー */}
-      <div className="bg-[#E53935] p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <Menu className="w-6 h-6 text-white" />
-            <h1 className="text-white text-xl">ポケモン図鑑</h1>
-          </div>
-          <Filter className="w-6 h-6 text-white" />
-        </div>
-        
-        {/* 検索バー */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
-          <Input
-            placeholder="ポケモンの名前を検索..."
-            value={searchTerm}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-white/90 border-white text-gray-800 placeholder:text-gray-500"
-          />
-        </div>
-      </div>
-
       {/* メインコンテンツ */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* 上部: 選択中のポケモン表示 */}
@@ -118,8 +97,8 @@ export function ModernPokedex() {
               </div>
             </div>
           ) : (
-            <PokemonHeroDisplay 
-              pokemon={selectedPokemon} 
+            <PokemonHeroDisplay
+              pokemon={selectedPokemon}
               onInfoClick={handleInfoClick}
             />
           )}
@@ -135,7 +114,7 @@ export function ModernPokedex() {
               <span className="text-gray-500 text-sm">音順</span>
             </div>
           </div>
-          
+
           <ScrollArea className="h-[calc(100%-60px)]">
             <div className="p-4 space-y-1">
               {loading && filteredPokemon.length === 0 ? (
@@ -153,12 +132,12 @@ export function ModernPokedex() {
                       isSelected={selectedPokemonUrl === pokemon.url}
                     />
                   ))}
-                  
+
                   {/* もっと読み込むボタン */}
                   {pokemonList && pokemonList.results.length < 151 && (
                     <div className="text-center pt-4">
-                      <Button 
-                        onClick={loadMorePokemon} 
+                      <Button
+                        onClick={loadMorePokemon}
                         disabled={loading}
                         className="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-300"
                       >
@@ -175,7 +154,7 @@ export function ModernPokedex() {
                   )}
                 </>
               )}
-              
+
               {/* 検索結果なし */}
               {filteredPokemon.length === 0 && !loading && searchTerm && (
                 <div className="text-center py-8">
