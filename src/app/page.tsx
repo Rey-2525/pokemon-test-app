@@ -5,18 +5,22 @@ import { ScrollArea } from "../components/ui/scroll-area";
 import { PokemonListItem } from "../components/PokemonListItem";
 import { PokemonHeroDisplay } from "../components/PokemonHeroDisplay";
 import { PokemonDetailModal } from "../components/PokemonDetailModal";
-import { fetchPokemonList, fetchPokemonDetails, getPokemonIdFromUrl } from "../utils/pokemonApi";
-import { Pokemon, PokemonListResponse } from "../types/pokemon";
+import { getPokemonList, getPokemonDetailWithJapaneseName, extractIdFromResourceUrl } from "@/lib/pokeapi";
+import type { PokemonDetail, PokemonListResponse } from "@/lib/pokeapi";
+
+type PokemonDetailWithJapanese = PokemonDetail & {
+  japaneseName: string;
+};
 import { Loader2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
 export function ModernPokedex() {
   const [pokemonList, setPokemonList] = useState<PokemonListResponse | null>(null);
   const [filteredPokemon, setFilteredPokemon] = useState<{name: string; url: string}[]>([]);
-  const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
+  const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetailWithJapanese | null>(null);
   const [selectedPokemonUrl, setSelectedPokemonUrl] = useState<string>("");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
@@ -24,8 +28,9 @@ export function ModernPokedex() {
     try {
       setLoadingDetail(true);
       setSelectedPokemonUrl(pokemonUrl);
-      const pokemonId = getPokemonIdFromUrl(pokemonUrl);
-      const pokemonDetail = await fetchPokemonDetails(pokemonId);
+      const pokemonId = extractIdFromResourceUrl(pokemonUrl);
+      if (!pokemonId) throw new Error('Invalid Pokemon URL');
+      const pokemonDetail = await getPokemonDetailWithJapaneseName(pokemonId);
       setSelectedPokemon(pokemonDetail);
     } catch (error) {
       console.error('ポケモン詳細の取得に失敗しました:', error);
@@ -55,7 +60,7 @@ export function ModernPokedex() {
   const loadPokemonList = async () => {
     try {
       setLoading(true);
-      const data = await fetchPokemonList(50); // より多くのポケモンを読み込み
+      const data = await getPokemonList(24, 0); // 適切な数のポケモンを読み込み
       setPokemonList(data);
     } catch (error) {
       console.error('ポケモンリストの取得に失敗しました:', error);
@@ -74,8 +79,11 @@ export function ModernPokedex() {
     try {
       setLoading(true);
       const currentCount = pokemonList.results.length;
-      const newData = await fetchPokemonList(currentCount + 50);
-      setPokemonList(newData);
+      const newData = await getPokemonList(24, currentCount);
+      setPokemonList(prevList => ({
+        ...newData,
+        results: [...(prevList?.results || []), ...newData.results]
+      }));
     } catch (error) {
       console.error('追加ポケモンの取得に失敗しました:', error);
     } finally {
@@ -105,8 +113,8 @@ export function ModernPokedex() {
         </div>
 
         {/* 下部: ポケモンリスト */}
-        <div className="h-1/2 bg-white">
-          <div className="p-4 border-b border-gray-200">
+        <div className="h-1/2 bg-white flex flex-col">
+          <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <p className="text-gray-700">
                 {filteredPokemon.length}匹のポケモン
@@ -115,8 +123,8 @@ export function ModernPokedex() {
             </div>
           </div>
 
-          <ScrollArea className="h-[calc(100%-60px)]">
-            <div className="p-4 space-y-1">
+          <ScrollArea className="flex-1">
+            <div className="px-4 py-2 space-y-1">
               {loading && filteredPokemon.length === 0 ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-gray-600" />

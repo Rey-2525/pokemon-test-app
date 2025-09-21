@@ -3,12 +3,16 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
-import { Pokemon } from "../types/pokemon";
+import type { PokemonDetail } from "@/lib/pokeapi";
 import { getTypeColor, capitalizeFirstLetter } from "../utils/pokemonTypes";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
+type PokemonDetailWithJapanese = PokemonDetail & {
+  japaneseName?: string;
+};
+
 interface PokemonDetailModalProps {
-  pokemon: Pokemon | null;
+  pokemon: PokemonDetailWithJapanese | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -27,7 +31,7 @@ export function PokemonDetailModal({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center">
-            #{paddedId} {capitalizeFirstLetter(pokemon.name)}
+            #{paddedId} {pokemon.japaneseName || capitalizeFirstLetter(pokemon.name)}
           </DialogTitle>
         </DialogHeader>
 
@@ -35,8 +39,8 @@ export function PokemonDetailModal({
           {/* ポケモン画像 */}
           <div className="text-center">
             <ImageWithFallback
-              src={pokemon.sprites.other["official-artwork"].front_default}
-              fallbackSrc={pokemon.sprites.front_default}
+              src={pokemon.sprites.other?.["official-artwork"]?.front_default || ""}
+              fallbackSrc={pokemon.sprites.front_default || ""}
               alt={pokemon.name}
               className="w-32 h-32 mx-auto object-contain"
             />

@@ -4,12 +4,12 @@ import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { PokemonCard } from "./PokemonCard";
 import { PokemonDetailModal } from "./PokemonDetailModal";
-import {
-  fetchPokemonList,
-  fetchPokemonDetails,
-  getPokemonIdFromUrl,
-} from "../utils/pokemonApi";
-import { Pokemon, PokemonListResponse } from "../types/pokemon";
+import { getPokemonList, getPokemonDetailWithJapaneseName, extractIdFromResourceUrl } from "@/lib/pokeapi";
+import type { PokemonDetail, PokemonListResponse } from "@/lib/pokeapi";
+
+type PokemonDetailWithJapanese = PokemonDetail & {
+  japaneseName: string;
+};
 import { Search, Loader2 } from "lucide-react";
 
 export function Pokedex() {
@@ -17,7 +17,7 @@ export function Pokedex() {
     null
   );
   const [filteredPokemon, setFilteredPokemon] = useState<{name: string; url: string}[]>([]);
-  const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
+  const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetailWithJapanese | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -39,7 +39,7 @@ export function Pokedex() {
   const loadPokemonList = async () => {
     try {
       setLoading(true);
-      const data = await fetchPokemonList(24);
+      const data = await getPokemonList(24, 0);
       setPokemonList(data);
     } catch (error) {
       console.error("ポケモンリストの取得に失敗しました:", error);
@@ -53,8 +53,9 @@ export function Pokedex() {
   ) => {
     try {
       setLoadingDetail(true);
-      const pokemonId = getPokemonIdFromUrl(pokemonUrl);
-      const pokemonDetail = await fetchPokemonDetails(pokemonId);
+      const pokemonId = extractIdFromResourceUrl(pokemonUrl);
+      if (!pokemonId) throw new Error('Invalid Pokemon URL');
+      const pokemonDetail = await getPokemonDetailWithJapaneseName(pokemonId);
       setSelectedPokemon(pokemonDetail);
       setIsDetailModalOpen(true);
     } catch (error) {
@@ -70,8 +71,11 @@ export function Pokedex() {
     try {
       setLoading(true);
       const currentCount = pokemonList.results.length;
-      const newData = await fetchPokemonList(currentCount + 24);
-      setPokemonList(newData);
+      const newData = await getPokemonList(24, currentCount);
+      setPokemonList(prevList => ({
+        ...newData,
+        results: [...(prevList?.results || []), ...newData.results]
+      }));
     } catch (error) {
       console.error("追加ポケモンの取得に失敗しました:", error);
     } finally {
