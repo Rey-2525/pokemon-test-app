@@ -1,11 +1,15 @@
 import { Badge } from "./ui/badge";
-import { Pokemon } from "../types/pokemon";
+import type { PokemonDetail } from "@/lib/pokeapi";
 import { getTypeColor, capitalizeFirstLetter } from "../utils/pokemonTypes";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Info } from "lucide-react";
 
+type PokemonDetailWithJapanese = PokemonDetail & {
+  japaneseName?: string;
+};
+
 interface PokemonHeroDisplayProps {
-  pokemon: Pokemon | null;
+  pokemon: PokemonDetailWithJapanese | null;
   onInfoClick?: () => void;
 }
 
@@ -31,8 +35,8 @@ export function PokemonHeroDisplay({ pokemon, onInfoClick }: PokemonHeroDisplayP
       <div className="relative mb-6">
         <div className="w-48 h-48 mx-auto mb-4 rounded-full bg-gray-50 p-4 shadow-lg">
           <ImageWithFallback
-            src={pokemon.sprites.other['official-artwork'].front_default}
-            fallbackSrc={pokemon.sprites.front_default}
+            src={pokemon.sprites.other?.['official-artwork']?.front_default || ""}
+            fallbackSrc={pokemon.sprites.front_default || ""}
             alt={pokemon.name}
             className="w-full h-full object-contain drop-shadow-2xl"
           />
@@ -53,8 +57,8 @@ export function PokemonHeroDisplay({ pokemon, onInfoClick }: PokemonHeroDisplayP
       <div className="space-y-4">
         <div>
           <p className="text-gray-600 text-lg mb-1">No.{paddedId}</p>
-          <h1 className="text-gray-800 text-4xl mb-4 capitalize">
-            {capitalizeFirstLetter(pokemon.name)}
+          <h1 className="text-gray-800 text-4xl mb-4">
+            {pokemon.japaneseName || capitalizeFirstLetter(pokemon.name)}
           </h1>
         </div>
 

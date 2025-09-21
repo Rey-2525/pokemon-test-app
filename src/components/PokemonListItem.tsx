@@ -1,4 +1,4 @@
-import { getPokemonIdFromUrl } from "../utils/pokemonApi";
+import { extractIdFromResourceUrl } from "@/lib/pokeapi";
 import { capitalizeFirstLetter } from "../utils/pokemonTypes";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Eye } from "lucide-react";
@@ -16,13 +16,13 @@ export function PokemonListItem({
   onClick,
   isSelected = false,
 }: PokemonListItemProps) {
-  const pokemonId = getPokemonIdFromUrl(url);
-  const paddedId = pokemonId.toString().padStart(3, "0");
+  const pokemonId = extractIdFromResourceUrl(url);
+  const paddedId = (pokemonId || 0).toString().padStart(3, "0");
 
   return (
     <div
       className={`
-        flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200 mb-2
+        flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200
         ${
           isSelected
             ? "bg-red-50 scale-105 shadow-md border-2 border-red-200"
@@ -35,7 +35,7 @@ export function PokemonListItem({
         {/* ポケモン画像 */}
         <div className="w-12 h-12 flex-shrink-0">
           <ImageWithFallback
-            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`}
+            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId || 0}.png`}
             alt={name}
             className="w-full h-full object-contain"
           />

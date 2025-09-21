@@ -36,6 +36,13 @@ export type PokemonSpecies = {
   flavor_text_entries: { language: { name: string }; flavor_text: string }[];
   genera: { language: { name: string }; genus: string }[];
   evolution_chain: { url: string } | null;
+  names: { language: { name: string }; name: string }[];
+};
+
+export type TypeDetail = {
+  id: number;
+  name: string;
+  names: { language: { name: string }; name: string }[];
 };
 
 // 共有フェッチャ（App Router のサーバー実行前提）
@@ -74,6 +81,10 @@ export async function getPokemonDetail(idOrName: string | number) {
 
 export async function getPokemonSpecies(idOrName: string | number) {
   return api<PokemonSpecies>(`/pokemon-species/${idOrName}`);
+}
+
+export async function getTypeDetail(idOrName: string | number) {
+  return api<TypeDetail>(`/type/${idOrName}`);
 }
 
 // 一覧の results の url から ID を抜くユーティリティ（/pokemon/25/ -> 25）
@@ -294,4 +305,41 @@ export function getTypeNameInJapanese(englishType: string): string {
 // ポケモンタイプの背景色を取得する関数
 export function getTypeColor(typeName: string): string {
   return TYPE_COLORS[typeName] || "bg-gray-100";
+}
+
+// 動的にポケモン名を日本語化する関数（species情報から取得）
+export async function getPokemonNameInJapaneseDynamic(idOrName: string | number): Promise<string> {
+  try {
+    const species = await getPokemonSpecies(idOrName);
+    const japaneseName = species.names.find(name => name.language.name === "ja")?.name;
+    return japaneseName || getPokemonNameInJapanese(String(idOrName));
+  } catch (error) {
+    console.error(`Failed to get Japanese name for ${idOrName}:`, error);
+    return getPokemonNameInJapanese(String(idOrName));
+  }
+}
+
+// 動的にタイプ名を日本語化する関数（type情報から取得）
+export async function getTypeNameInJapaneseDynamic(typeName: string): Promise<string> {
+  try {
+    const typeDetail = await getTypeDetail(typeName);
+    const japaneseName = typeDetail.names.find(name => name.language.name === "ja")?.name;
+    return japaneseName || getTypeNameInJapanese(typeName);
+  } catch (error) {
+    console.error(`Failed to get Japanese name for type ${typeName}:`, error);
+    return getTypeNameInJapanese(typeName);
+  }
+}
+
+// ポケモンの詳細情報に日本語名を付加する関数
+export async function getPokemonDetailWithJapaneseName(idOrName: string | number) {
+  const [detail, japaneseName] = await Promise.all([
+    getPokemonDetail(idOrName),
+    getPokemonNameInJapaneseDynamic(idOrName)
+  ]);
+
+  return {
+    ...detail,
+    japaneseName
+  };
 }
