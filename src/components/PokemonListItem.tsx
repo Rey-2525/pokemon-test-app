@@ -1,14 +1,17 @@
 import { extractIdFromResourceUrl } from "@/lib/pokeapi";
 import { capitalizeFirstLetter } from "../utils/pokemonTypes";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "./ImageWithFallback";
 import { Eye } from "lucide-react";
 
-interface PokemonListItemProps {
+const POKEMON_SPRITE_BASE_URL =
+  "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
+
+type PokemonListItemProps = {
   name: string;
   url: string;
   onClick: () => void;
   isSelected?: boolean;
-}
+};
 
 export function PokemonListItem({
   name,
@@ -35,7 +38,7 @@ export function PokemonListItem({
         {/* ポケモン画像 */}
         <div className="w-12 h-12 flex-shrink-0">
           <ImageWithFallback
-            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId || 0}.png`}
+            src={`${POKEMON_SPRITE_BASE_URL}/${pokemonId || 0}.png`}
             alt={name}
             className="w-full h-full object-contain"
           />
@@ -50,9 +53,6 @@ export function PokemonListItem({
             {capitalizeFirstLetter(name)}
           </h3>
         </div>
-
-        {/* 選択アイコン */}
-        {isSelected && <Eye className="w-5 h-5 text-red-600 flex-shrink-0" />}
       </div>
     </div>
   );

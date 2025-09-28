@@ -1,19 +1,22 @@
 import { Badge } from "./ui/badge";
 import type { PokemonDetail } from "@/lib/pokeapi";
 import { getTypeColor, capitalizeFirstLetter } from "../utils/pokemonTypes";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "./ImageWithFallback";
 import { Info } from "lucide-react";
 
 type PokemonDetailWithJapanese = PokemonDetail & {
   japaneseName?: string;
 };
 
-interface PokemonHeroDisplayProps {
+type PokemonHeroDisplayProps = {
   pokemon: PokemonDetailWithJapanese | null;
   onInfoClick?: () => void;
-}
+};
 
-export function PokemonHeroDisplay({ pokemon, onInfoClick }: PokemonHeroDisplayProps) {
+export function PokemonHeroDisplay({
+  pokemon,
+  onInfoClick,
+}: PokemonHeroDisplayProps) {
   if (!pokemon) {
     return (
       <div className="flex items-center justify-center h-full bg-white">
@@ -27,7 +30,7 @@ export function PokemonHeroDisplay({ pokemon, onInfoClick }: PokemonHeroDisplayP
     );
   }
 
-  const paddedId = pokemon.id.toString().padStart(3, '0');
+  const paddedId = pokemon.id.toString().padStart(3, "0");
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-white">
@@ -35,13 +38,15 @@ export function PokemonHeroDisplay({ pokemon, onInfoClick }: PokemonHeroDisplayP
       <div className="relative mb-6">
         <div className="w-48 h-48 mx-auto mb-4 rounded-full bg-gray-50 p-4 shadow-lg">
           <ImageWithFallback
-            src={pokemon.sprites.other?.['official-artwork']?.front_default || ""}
+            src={
+              pokemon.sprites.other?.["official-artwork"]?.front_default || ""
+            }
             fallbackSrc={pokemon.sprites.front_default || ""}
             alt={pokemon.name}
             className="w-full h-full object-contain drop-shadow-2xl"
           />
         </div>
-        
+
         {/* 詳細ボタン */}
         {onInfoClick && (
           <button
@@ -68,9 +73,9 @@ export function PokemonHeroDisplay({ pokemon, onInfoClick }: PokemonHeroDisplayP
             <Badge
               key={typeInfo.type.name}
               className="px-4 py-2 text-white border-0"
-              style={{ 
+              style={{
                 backgroundColor: getTypeColor(typeInfo.type.name),
-                boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
               }}
             >
               {capitalizeFirstLetter(typeInfo.type.name)}
