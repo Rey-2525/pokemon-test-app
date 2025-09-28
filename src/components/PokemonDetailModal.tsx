@@ -5,13 +5,13 @@ import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import type { PokemonDetail } from "@/lib/pokeapi";
 import { getTypeColor, capitalizeFirstLetter } from "../utils/pokemonTypes";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 type PokemonDetailWithJapanese = PokemonDetail & {
   japaneseName?: string;
 };
 
-interface PokemonDetailModalProps {
+type PokemonDetailModalProps = {
   pokemon: PokemonDetailWithJapanese | null;
   isOpen: boolean;
   onClose: () => void;
