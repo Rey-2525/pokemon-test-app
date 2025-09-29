@@ -3,6 +3,7 @@ import type { PokemonDetail } from "@/lib/pokeapi";
 import { getTypeColor, capitalizeFirstLetter } from "../utils/pokemonTypes";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { Info } from "lucide-react";
+import { useTypeNames } from "../hooks/useTypeNames";
 
 type PokemonDetailWithJapanese = PokemonDetail & {
   japaneseName?: string;
@@ -17,6 +18,8 @@ export function PokemonHeroDisplay({
   pokemon,
   onInfoClick,
 }: PokemonHeroDisplayProps) {
+  // カスタムフックを使用してタイプ名の日本語化を管理
+  const typeNames = useTypeNames(pokemon?.types);
   if (!pokemon) {
     return (
       <div className="flex items-center justify-center h-full bg-white">
@@ -78,7 +81,7 @@ export function PokemonHeroDisplay({
                 boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
               }}
             >
-              {capitalizeFirstLetter(typeInfo.type.name)}
+              {typeNames[typeInfo.type.name] || typeInfo.type.name}
             </Badge>
           ))}
         </div>

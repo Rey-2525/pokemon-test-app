@@ -93,182 +93,6 @@ export function extractIdFromResourceUrl(url: string): number | null {
   return m ? Number(m[1]) : null;
 }
 
-// ポケモン名の日本語化マッピング（一部の代表的なポケモン）
-const POKEMON_NAME_JP: Record<string, string> = {
-  bulbasaur: "フシギダネ",
-  ivysaur: "フシギソウ",
-  venusaur: "フシギバナ",
-  charmander: "ヒトカゲ",
-  charmeleon: "リザード",
-  charizard: "リザードン",
-  squirtle: "ゼニガメ",
-  wartortle: "カメール",
-  blastoise: "カメックス",
-  caterpie: "キャタピー",
-  metapod: "トランセル",
-  butterfree: "バタフリー",
-  weedle: "ビードル",
-  kakuna: "コクーン",
-  beedrill: "スピアー",
-  pidgey: "ポッポ",
-  pidgeotto: "ピジョン",
-  pidgeot: "ピジョット",
-  rattata: "コラッタ",
-  raticate: "ラッタ",
-  spearow: "オニスズメ",
-  fearow: "オニドリル",
-  ekans: "アーボ",
-  arbok: "アーボック",
-  pikachu: "ピカチュウ",
-  raichu: "ライチュウ",
-  sandshrew: "サンド",
-  sandslash: "サンドパン",
-  "nidoran-f": "ニドラン♀",
-  nidorina: "ニドリーナ",
-  nidoqueen: "ニドクイン",
-  "nidoran-m": "ニドラン♂",
-  nidorino: "ニドリーノ",
-  nidoking: "ニドキング",
-  clefairy: "ピッピ",
-  clefable: "ピクシー",
-  vulpix: "ロコン",
-  ninetales: "キュウコン",
-  jigglypuff: "プリン",
-  wigglytuff: "プクリン",
-  zubat: "ズバット",
-  golbat: "ゴルバット",
-  oddish: "ナゾノクサ",
-  gloom: "クサイハナ",
-  vileplume: "ラフレシア",
-  paras: "パラス",
-  parasect: "パラセクト",
-  venonat: "コンパン",
-  venomoth: "モルフォン",
-  diglett: "ディグダ",
-  dugtrio: "ダグトリオ",
-  meowth: "ニャース",
-  persian: "ペルシアン",
-  psyduck: "コダック",
-  golduck: "ゴルダック",
-  mankey: "マンキー",
-  primeape: "オコリザル",
-  growlithe: "ガーディ",
-  arcanine: "ウインディ",
-  poliwag: "ニョロモ",
-  poliwhirl: "ニョロゾ",
-  poliwrath: "ニョロボン",
-  abra: "ケーシィ",
-  kadabra: "ユンゲラー",
-  alakazam: "フーディン",
-  machop: "ワンリキー",
-  machoke: "ゴーリキー",
-  machamp: "カイリキー",
-  bellsprout: "マダツボミ",
-  weepinbell: "ウツドン",
-  victreebel: "ウツボット",
-  tentacool: "メノクラゲ",
-  tentacruel: "ドククラゲ",
-  geodude: "イシツブテ",
-  graveler: "ゴローン",
-  golem: "ゴローニャ",
-  ponyta: "ポニータ",
-  rapidash: "ギャロップ",
-  slowpoke: "ヤドン",
-  slowbro: "ヤドラン",
-  magnemite: "コイル",
-  magneton: "レアコイル",
-  "farfetchd": "カモネギ",
-  doduo: "ドードー",
-  dodrio: "ドードリオ",
-  seel: "パウワウ",
-  dewgong: "ジュゴン",
-  grimer: "ベトベター",
-  muk: "ベトベトン",
-  shellder: "シェルダー",
-  cloyster: "パルシェン",
-  gastly: "ゴース",
-  haunter: "ゴースト",
-  gengar: "ゲンガー",
-  onix: "イワーク",
-  drowzee: "スリープ",
-  hypno: "スリーパー",
-  krabby: "クラブ",
-  kingler: "キングラー",
-  voltorb: "ビリリダマ",
-  electrode: "マルマイン",
-  exeggcute: "タマタマ",
-  exeggutor: "ナッシー",
-  cubone: "カラカラ",
-  marowak: "ガラガラ",
-  hitmonlee: "サワムラー",
-  hitmonchan: "エビワラー",
-  lickitung: "ベロリンガ",
-  koffing: "ドガース",
-  weezing: "マタドガス",
-  rhyhorn: "サイホーン",
-  rhydon: "サイドン",
-  chansey: "ラッキー",
-  tangela: "モンジャラ",
-  kangaskhan: "ガルーラ",
-  horsea: "タッツー",
-  seadra: "シードラ",
-  goldeen: "トサキント",
-  seaking: "アズマオウ",
-  staryu: "ヒトデマン",
-  starmie: "スターミー",
-  "mr-mime": "バリヤード",
-  scyther: "ストライク",
-  jynx: "ルージュラ",
-  electabuzz: "エレブー",
-  magmar: "ブーバー",
-  pinsir: "カイロス",
-  tauros: "ケンタロス",
-  magikarp: "コイキング",
-  gyarados: "ギャラドス",
-  lapras: "ラプラス",
-  ditto: "メタモン",
-  eevee: "イーブイ",
-  vaporeon: "シャワーズ",
-  jolteon: "サンダース",
-  flareon: "ブースター",
-  porygon: "ポリゴン",
-  omanyte: "オムナイト",
-  omastar: "オムスター",
-  kabuto: "カブト",
-  kabutops: "カブトプス",
-  aerodactyl: "プテラ",
-  snorlax: "カビゴン",
-  articuno: "フリーザー",
-  zapdos: "サンダー",
-  moltres: "ファイヤー",
-  dratini: "ミニリュウ",
-  dragonair: "ハクリュー",
-  dragonite: "カイリュー",
-  mewtwo: "ミュウツー",
-  mew: "ミュウ",
-};
-
-// ポケモンタイプの日本語化マッピング
-const TYPE_NAME_JP: Record<string, string> = {
-  normal: "ノーマル",
-  fighting: "かくとう",
-  flying: "ひこう",
-  poison: "どく",
-  ground: "じめん",
-  rock: "いわ",
-  bug: "むし",
-  ghost: "ゴースト",
-  steel: "はがね",
-  fire: "ほのお",
-  water: "みず",
-  grass: "くさ",
-  electric: "でんき",
-  psychic: "エスパー",
-  ice: "こおり",
-  dragon: "ドラゴン",
-  dark: "あく",
-  fairy: "フェアリー",
-};
 
 // タイプ別の背景色定義
 const TYPE_COLORS: Record<string, string> = {
@@ -292,43 +116,66 @@ const TYPE_COLORS: Record<string, string> = {
   fairy: "bg-pink-300",
 };
 
-// ポケモン名を日本語化する関数
-export function getPokemonNameInJapanese(englishName: string): string {
-  return POKEMON_NAME_JP[englishName] || englishName;
-}
-
-// ポケモンタイプを日本語化する関数
-export function getTypeNameInJapanese(englishType: string): string {
-  return TYPE_NAME_JP[englishType] || englishType;
-}
 
 // ポケモンタイプの背景色を取得する関数
 export function getTypeColor(typeName: string): string {
   return TYPE_COLORS[typeName] || "bg-gray-100";
 }
 
+// ジェネリック関数でキャッシュ機能付きの日本語化処理を共通化
+async function getJapaneseNameWithCache<T>(
+  key: string | number,
+  fetchFunction: () => Promise<T>,
+  extractName: (data: T) => string | undefined,
+  fallbackValue: string
+): Promise<string> {
+  // キャッシュのインポートは動的にして、初期化時のエラーを防ぐ
+  const { pokemonNameCache } = await import("../utils/pokemonNameCache");
+
+  // キャッシュから取得を試行
+  const cachedName = pokemonNameCache.get(key);
+  if (cachedName) {
+    return cachedName;
+  }
+
+  try {
+    const data = await fetchFunction();
+    const japaneseName = extractName(data);
+    const result = japaneseName || fallbackValue;
+
+    // 結果をキャッシュに保存
+    pokemonNameCache.set(key, result);
+
+    return result;
+  } catch (error) {
+    console.error(`Failed to get Japanese name for ${key}:`, error);
+    const fallback = fallbackValue;
+
+    // フォールバック結果もキャッシュ（短いTTL）
+    pokemonNameCache.set(key, fallback, 60 * 60 * 1000); // 1時間
+
+    return fallback;
+  }
+}
+
 // 動的にポケモン名を日本語化する関数（species情報から取得）
 export async function getPokemonNameInJapaneseDynamic(idOrName: string | number): Promise<string> {
-  try {
-    const species = await getPokemonSpecies(idOrName);
-    const japaneseName = species.names.find(name => name.language.name === "ja")?.name;
-    return japaneseName || getPokemonNameInJapanese(String(idOrName));
-  } catch (error) {
-    console.error(`Failed to get Japanese name for ${idOrName}:`, error);
-    return getPokemonNameInJapanese(String(idOrName));
-  }
+  return getJapaneseNameWithCache(
+    idOrName,
+    () => getPokemonSpecies(idOrName),
+    (species) => species.names.find(name => name.language.name === "ja")?.name,
+    `${idOrName}（取得中）` // 一貫したフォールバック表示
+  );
 }
 
 // 動的にタイプ名を日本語化する関数（type情報から取得）
 export async function getTypeNameInJapaneseDynamic(typeName: string): Promise<string> {
-  try {
-    const typeDetail = await getTypeDetail(typeName);
-    const japaneseName = typeDetail.names.find(name => name.language.name === "ja")?.name;
-    return japaneseName || getTypeNameInJapanese(typeName);
-  } catch (error) {
-    console.error(`Failed to get Japanese name for type ${typeName}:`, error);
-    return getTypeNameInJapanese(typeName);
-  }
+  return getJapaneseNameWithCache(
+    `type_${typeName}`, // タイプ名のキャッシュキーにプレフィックスを追加
+    () => getTypeDetail(typeName),
+    (typeDetail) => typeDetail.names.find(name => name.language.name === "ja")?.name,
+    `${typeName}（取得中）` // 一貫したフォールバック表示
+  );
 }
 
 // ポケモンの詳細情報に日本語名を付加する関数

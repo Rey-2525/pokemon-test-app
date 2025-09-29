@@ -1,7 +1,6 @@
-import { extractIdFromResourceUrl } from "@/lib/pokeapi";
-import { capitalizeFirstLetter } from "../utils/pokemonTypes";
+import { extractIdFromResourceUrl, getPokemonNameInJapaneseDynamic } from "@/lib/pokeapi";
 import { ImageWithFallback } from "./ImageWithFallback";
-import { Eye } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const POKEMON_SPRITE_BASE_URL =
   "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
@@ -21,6 +20,29 @@ export function PokemonListItem({
 }: PokemonListItemProps) {
   const pokemonId = extractIdFromResourceUrl(url);
   const paddedId = (pokemonId || 0).toString().padStart(3, "0");
+
+  // 動的日本語名取得の状態管理
+  const [japaneseName, setJapaneseName] = useState<string>('');
+  const [isLoadingJapaneseName, setIsLoadingJapaneseName] = useState(true);
+
+  useEffect(() => {
+    // 常に動的取得を実行
+    if (pokemonId) {
+      setIsLoadingJapaneseName(true);
+      getPokemonNameInJapaneseDynamic(pokemonId)
+        .then(dynamicName => {
+          setJapaneseName(dynamicName);
+        })
+        .catch(error => {
+          console.warn(`Failed to get dynamic Japanese name for ${name}:`, error);
+          // エラー時は元の名前を保持
+          setJapaneseName(name);
+        })
+        .finally(() => {
+          setIsLoadingJapaneseName(false);
+        });
+    }
+  }, [name, pokemonId]);
 
   return (
     <div
@@ -49,8 +71,12 @@ export function PokemonListItem({
           <div className="flex items-center space-x-2 mb-1">
             <span className="text-gray-600 text-sm">No.{paddedId}</span>
           </div>
-          <h3 className="text-gray-800 truncate capitalize text-lg">
-            {capitalizeFirstLetter(name)}
+          <h3 className="text-gray-800 truncate text-lg">
+            {isLoadingJapaneseName ? (
+              <span className="text-gray-500 animate-pulse">読み込み中...</span>
+            ) : (
+              japaneseName || name
+            )}
           </h3>
         </div>
       </div>

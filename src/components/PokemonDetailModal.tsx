@@ -6,6 +6,7 @@ import { Progress } from "./ui/progress";
 import type { PokemonDetail } from "@/lib/pokeapi";
 import { getTypeColor, capitalizeFirstLetter } from "../utils/pokemonTypes";
 import { ImageWithFallback } from "./ImageWithFallback";
+import { useTypeNames } from "../hooks/useTypeNames";
 
 type PokemonDetailWithJapanese = PokemonDetail & {
   japaneseName?: string;
@@ -22,6 +23,9 @@ export function PokemonDetailModal({
   isOpen,
   onClose,
 }: PokemonDetailModalProps) {
+  // カスタムフックを使用してタイプ名の日本語化を管理
+  const typeNames = useTypeNames(pokemon?.types);
+
   if (!pokemon) return null;
 
   const paddedId = pokemon.id.toString().padStart(3, "0");
@@ -58,7 +62,7 @@ export function PokemonDetailModal({
                     color: "white",
                   }}
                 >
-                  {capitalizeFirstLetter(typeInfo.type.name)}
+                  {typeNames[typeInfo.type.name] || typeInfo.type.name}
                 </Badge>
               ))}
             </div>
