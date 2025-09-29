@@ -1,13 +1,8 @@
 import { Badge } from "./ui/badge";
-import type { PokemonDetail } from "@/lib/pokeapi";
-import { getTypeColor, capitalizeFirstLetter } from "../utils/pokemonTypes";
+import type { PokemonDetailWithJapanese } from "@/services/pokemonService";
+import { getTypeColor, capitalizeFirstLetter, formatPokemonId, getTypeNameInJapanese } from "@/utils/pokemonNameMap";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { Info } from "lucide-react";
-import { useTypeNames } from "../hooks/useTypeNames";
-
-type PokemonDetailWithJapanese = PokemonDetail & {
-  japaneseName?: string;
-};
 
 type PokemonHeroDisplayProps = {
   pokemon: PokemonDetailWithJapanese | null;
@@ -18,8 +13,6 @@ export function PokemonHeroDisplay({
   pokemon,
   onInfoClick,
 }: PokemonHeroDisplayProps) {
-  // カスタムフックを使用してタイプ名の日本語化を管理
-  const typeNames = useTypeNames(pokemon?.types);
   if (!pokemon) {
     return (
       <div className="flex items-center justify-center h-full bg-white">
@@ -33,7 +26,7 @@ export function PokemonHeroDisplay({
     );
   }
 
-  const paddedId = pokemon.id.toString().padStart(3, "0");
+  const paddedId = formatPokemonId(pokemon.id);
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-white">
@@ -81,7 +74,7 @@ export function PokemonHeroDisplay({
                 boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
               }}
             >
-              {typeNames[typeInfo.type.name] || typeInfo.type.name}
+              {getTypeNameInJapanese(typeInfo.type.name)}
             </Badge>
           ))}
         </div>

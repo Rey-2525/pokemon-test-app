@@ -5,12 +5,8 @@ import { ScrollArea } from "../components/ui/scroll-area";
 import { PokemonListItem } from "../components/PokemonListItem";
 import { PokemonHeroDisplay } from "../components/PokemonHeroDisplay";
 import { PokemonDetailModal } from "../components/PokemonDetailModal";
-import { getPokemonList, getPokemonDetailWithJapaneseName, extractIdFromResourceUrl } from "@/lib/pokeapi";
-import type { PokemonDetail, PokemonListResponse } from "@/lib/pokeapi";
-
-type PokemonDetailWithJapanese = PokemonDetail & {
-  japaneseName: string;
-};
+import { pokemonService, type PokemonDetailWithJapanese } from "@/services/pokemonService";
+import type { PokemonListResponse } from "@/api/pokemon.api";
 import { Loader2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -28,9 +24,9 @@ export function ModernPokedex() {
     try {
       setLoadingDetail(true);
       setSelectedPokemonUrl(pokemonUrl);
-      const pokemonId = extractIdFromResourceUrl(pokemonUrl);
+      const pokemonId = pokemonService.extractIdFromResourceUrl(pokemonUrl);
       if (!pokemonId) throw new Error('Invalid Pokemon URL');
-      const pokemonDetail = await getPokemonDetailWithJapaneseName(pokemonId);
+      const pokemonDetail = await pokemonService.getPokemonDetailWithJapaneseName(pokemonId);
       setSelectedPokemon(pokemonDetail);
     } catch (error) {
       console.error('ポケモン詳細の取得に失敗しました:', error);
@@ -60,7 +56,7 @@ export function ModernPokedex() {
   const loadPokemonList = async () => {
     try {
       setLoading(true);
-      const data = await getPokemonList(24, 0); // 適切な数のポケモンを読み込み
+      const data = await pokemonService.getPokemonList(24, 0); // 適切な数のポケモンを読み込み
       setPokemonList(data);
     } catch (error) {
       console.error('ポケモンリストの取得に失敗しました:', error);
@@ -79,7 +75,7 @@ export function ModernPokedex() {
     try {
       setLoading(true);
       const currentCount = pokemonList.results.length;
-      const newData = await getPokemonList(24, currentCount);
+      const newData = await pokemonService.getPokemonList(24, currentCount);
       setPokemonList(prevList => ({
         ...newData,
         results: [...(prevList?.results || []), ...newData.results]

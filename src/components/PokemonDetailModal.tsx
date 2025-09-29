@@ -3,14 +3,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
-import type { PokemonDetail } from "@/lib/pokeapi";
-import { getTypeColor, capitalizeFirstLetter } from "../utils/pokemonTypes";
+import type { PokemonDetailWithJapanese } from "@/services/pokemonService";
+import { getTypeColor, capitalizeFirstLetter, formatPokemonId, getStatNameInJapanese, getStatMaxValue, getTypeNameInJapanese } from "@/utils/pokemonNameMap";
 import { ImageWithFallback } from "./ImageWithFallback";
-import { useTypeNames } from "../hooks/useTypeNames";
-
-type PokemonDetailWithJapanese = PokemonDetail & {
-  japaneseName?: string;
-};
 
 type PokemonDetailModalProps = {
   pokemon: PokemonDetailWithJapanese | null;
@@ -23,12 +18,9 @@ export function PokemonDetailModal({
   isOpen,
   onClose,
 }: PokemonDetailModalProps) {
-  // カスタムフックを使用してタイプ名の日本語化を管理
-  const typeNames = useTypeNames(pokemon?.types);
-
   if (!pokemon) return null;
 
-  const paddedId = pokemon.id.toString().padStart(3, "0");
+  const paddedId = formatPokemonId(pokemon.id);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -62,7 +54,7 @@ export function PokemonDetailModal({
                     color: "white",
                   }}
                 >
-                  {typeNames[typeInfo.type.name] || typeInfo.type.name}
+                  {getTypeNameInJapanese(typeInfo.type.name)}
                 </Badge>
               ))}
             </div>
@@ -85,15 +77,7 @@ export function PokemonDetailModal({
             <p className="mb-3 text-center">ベースステータス</p>
             <div className="space-y-3">
               {pokemon.stats.map((stat) => {
-                const statName =
-                  {
-                    hp: "HP",
-                    attack: "攻撃",
-                    defense: "防御",
-                    "special-attack": "特攻",
-                    "special-defense": "特防",
-                    speed: "素早さ",
-                  }[stat.stat.name] || stat.stat.name;
+                const statName = getStatNameInJapanese(stat.stat.name);
 
                 return (
                   <div key={stat.stat.name} className="space-y-1">
@@ -102,7 +86,7 @@ export function PokemonDetailModal({
                       <span>{stat.base_stat}</span>
                     </div>
                     <Progress
-                      value={(stat.base_stat / 200) * 100}
+                      value={(stat.base_stat / getStatMaxValue(stat.stat.name)) * 100}
                       className="h-2"
                     />
                   </div>
