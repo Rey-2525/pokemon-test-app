@@ -1,4 +1,5 @@
-import { extractIdFromResourceUrl, getPokemonNameInJapaneseDynamic } from "@/lib/pokeapi";
+import { pokemonService } from "@/services/pokemonService";
+import { formatPokemonId } from "@/utils/pokemonNameMap";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { useState, useEffect } from "react";
 
@@ -18,8 +19,8 @@ export function PokemonListItem({
   onClick,
   isSelected = false,
 }: PokemonListItemProps) {
-  const pokemonId = extractIdFromResourceUrl(url);
-  const paddedId = (pokemonId || 0).toString().padStart(3, "0");
+  const pokemonId = pokemonService.extractIdFromResourceUrl(url);
+  const paddedId = formatPokemonId(pokemonId || 0);
 
   // 動的日本語名取得の状態管理
   const [japaneseName, setJapaneseName] = useState<string>('');
@@ -29,7 +30,7 @@ export function PokemonListItem({
     // 常に動的取得を実行
     if (pokemonId) {
       setIsLoadingJapaneseName(true);
-      getPokemonNameInJapaneseDynamic(pokemonId)
+      pokemonService.getPokemonNameInJapanese(pokemonId)
         .then(dynamicName => {
           setJapaneseName(dynamicName);
         })
