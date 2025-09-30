@@ -63,7 +63,7 @@ export function ModernPokedex() {
       const data = await getPokemonList(24, 0); // 適切な数のポケモンを読み込み
       setPokemonList(data);
     } catch (error) {
-      console.error('ポケモンリストの取得に失敗しました:', error);
+      console.error('ポケモンリストの取得に失敗しました:!!!!', error);
     } finally {
       setLoading(false);
     }
