@@ -69,12 +69,6 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     throw error;
   }
 }
-
-export async function getPokemonList(limit: number, offset: number) {
-  const qs = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  return api<PokemonListResponse>(`/pokemon?${qs.toString()}`);
-}
-
 export async function getPokemonDetail(idOrName: string | number) {
   return api<PokemonDetail>(`/pokemon/${idOrName}`);
 }

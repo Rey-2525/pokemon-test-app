@@ -41,11 +41,6 @@ class PokemonService {
     return match ? Number(match[1]) : null;
   }
 
-  // ポケモンリストを取得
-  async getPokemonList(limit: number, offset: number): Promise<PokemonListResponse> {
-    return pokemonAPI.getPokemonList(limit, offset);
-  }
-
   // ポケモンの詳細情報を取得
   async getPokemonDetail(idOrName: string | number): Promise<PokemonDetail> {
     return pokemonAPI.getPokemonDetail(idOrName);
