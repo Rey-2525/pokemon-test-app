@@ -2,16 +2,13 @@ import { Badge } from "./ui/badge";
 import type { PokemonDetailWithJapanese } from "@/services/pokemonService";
 import { getTypeColor, capitalizeFirstLetter, formatPokemonId, getTypeNameInJapanese } from "@/utils/pokemonNameMap";
 import { ImageWithFallback } from "./ImageWithFallback";
-import { Info } from "lucide-react";
 
 type PokemonHeroDisplayProps = {
   pokemon: PokemonDetailWithJapanese | null;
-  onInfoClick?: () => void;
 };
 
 export function PokemonHeroDisplay({
   pokemon,
-  onInfoClick,
 }: PokemonHeroDisplayProps) {
   if (!pokemon) {
     return (
@@ -43,15 +40,6 @@ export function PokemonHeroDisplay({
           />
         </div>
 
-        {/* 詳細ボタン */}
-        {onInfoClick && (
-          <button
-            onClick={onInfoClick}
-            className="absolute top-2 right-2 w-10 h-10 rounded-full bg-gray-800/80 flex items-center justify-center hover:bg-gray-800 transition-colors"
-          >
-            <Info className="w-5 h-5 text-white" />
-          </button>
-        )}
       </div>
 
       {/* ポケモン基本情報 */}
