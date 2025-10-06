@@ -13,7 +13,6 @@ export function ModernPokedex() {
   const [pokemonList, setPokemonList] = useState<PokemonListResponse | null>(null);
   const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetailWithJapanese | null>(null);
   const [isLoadingList, setIsLoadingList] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
   // 表示するポケモンリスト（検索機能を削除したので直接使用）
@@ -59,25 +58,6 @@ export function ModernPokedex() {
 
     initialize();
   }, [handlePokemonSelect]);
-
-  const loadMorePokemon = async () => {
-    if (!pokemonList) return;
-
-    try {
-      setIsLoadingMore(true);
-      const currentCount = pokemonList.results.length;
-      const newData = await pokemonService.getPokemonList(24, currentCount);
-      setPokemonList(prevList => ({
-        ...newData,
-        results: [...(prevList?.results || []), ...newData.results]
-      }));
-    } catch (error) {
-      console.error('追加ポケモンの取得に失敗しました:', error);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  };
-
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
@@ -127,26 +107,6 @@ export function ModernPokedex() {
                       isSelected={selectedPokemonUrl === pokemon.url}
                     />
                   ))}
-
-                  {/* もっと読み込むボタン */}
-                  {pokemonList && pokemonList.results.length < 151 && (
-                    <div className="text-center pt-4">
-                      <Button
-                        onClick={loadMorePokemon}
-                        disabled={isLoadingMore}
-                        className="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-300"
-                      >
-                        {isLoadingMore ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                            読み込み中...
-                          </>
-                        ) : (
-                          'もっと見る'
-                        )}
-                      </Button>
-                    </div>
-                  )}
                 </>
               )}
             </div>
