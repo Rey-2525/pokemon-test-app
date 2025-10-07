@@ -67,6 +67,8 @@ class PokemonAPIClient {
     }
   }
 
+  // タスク1. ポケモンリストをAPIから取得
+
   async getPokemonDetail(idOrName: string | number): Promise<PokemonDetail> {
     return this.fetchAPI<PokemonDetail>(`/pokemon/${idOrName}`);
   }

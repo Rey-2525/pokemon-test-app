@@ -41,6 +41,8 @@ class PokemonService {
     return match ? Number(match[1]) : null;
   }
 
+  // タスク1. ポケモンリスト取得処理
+
   // ポケモンの詳細情報を取得
   async getPokemonDetail(idOrName: string | number): Promise<PokemonDetail> {
     return pokemonAPI.getPokemonDetail(idOrName);

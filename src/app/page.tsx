@@ -7,7 +7,6 @@ import { PokemonHeroDisplay } from "../components/PokemonHeroDisplay";
 import { pokemonService, type PokemonDetailWithJapanese } from "@/services/pokemonService";
 import type { PokemonListResponse } from "@/api/pokemon.api";
 import { Loader2 } from "lucide-react";
-import { Button } from "../components/ui/button";
 
 export function ModernPokedex() {
   const [pokemonList, setPokemonList] = useState<PokemonListResponse | null>(null);
@@ -36,7 +35,9 @@ export function ModernPokedex() {
       setIsLoadingDetail(false);
     }
   }, []);
-  
+
+  // タスク1.初期読み込みと最初のポケモン自動選択
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
       {/* メインコンテンツ */}
