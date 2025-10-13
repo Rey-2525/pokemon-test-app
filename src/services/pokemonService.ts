@@ -42,6 +42,9 @@ class PokemonService {
   }
 
   // タスク1. ポケモンリスト取得処理
+  async getPokemonList(limit: number, offset: number): Promise<PokemonListResponse> {
+    return pokemonAPI.getPokemonList(limit, offset);
+  }
 
   // ポケモンの詳細情報を取得
   async getPokemonDetail(idOrName: string | number): Promise<PokemonDetail> {
@@ -67,6 +70,9 @@ class PokemonService {
       return fallback;
     }
   }
+
+
+
 
   // タイプの日本語名を取得（キャッシュ機能付き）
   async getTypeNameInJapanese(typeName: string): Promise<string> {

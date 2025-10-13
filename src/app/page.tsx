@@ -37,6 +37,24 @@ export function ModernPokedex() {
   }, []);
 
   // タスク1.初期読み込みと最初のポケモン自動選択
+  useEffect(() => {
+    const loadInitialPokemon = async () => {
+      try {
+        setIsLoadingList(true);
+        const data = await pokemonService.getPokemonList(24, 0);
+        setPokemonList(data);
+
+        if (data.results.length > 0) {
+          handlePokemonSelect(data.results[0].url);
+        }
+      } catch (error) {
+        console.error('初期ポケモンの読み込みに失敗しました:', error);
+      } finally {
+        setIsLoadingList(false);
+      }
+    }
+    loadInitialPokemon();
+  }, [handlePokemonSelect]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-100">
@@ -96,5 +114,4 @@ export function ModernPokedex() {
     </div>
   );
 }
-
 export default ModernPokedex;
