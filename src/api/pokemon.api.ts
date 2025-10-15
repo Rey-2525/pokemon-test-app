@@ -69,7 +69,10 @@ class PokemonAPIClient {
 
   // タスク1. ポケモンリストをAPIから取得
   async getPokemonList(limit: number, offset: number): Promise<PokemonListResponse> {
-    const qs = new URLSearchParams();
+    const qs = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString()
+    });
     return this.fetchAPI<PokemonListResponse>(`/pokemon?${qs.toString()}`);
   }
 
