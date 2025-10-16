@@ -7,13 +7,13 @@ import { PokemonHeroDisplay } from "../components/PokemonHeroDisplay";
 import { SearchModal } from "../components/SearchModal";
 import { pokemonService, type PokemonDetailWithJapanese } from "@/services/pokemonService";
 import type { PokemonListResponse, NamedAPIResource } from "@/api/pokemon.api";
-import { Loader2, Search, ChevronDown, Check } from "lucide-react";
+import { Loader2, Search, LayoutGrid } from "lucide-react";
 
 type PokemonWithJapaneseName = NamedAPIResource & {
   japaneseName?: string;
 };
 
-type Generation = 1 | 2 | 3 | 4 | 5 | 6;
+type Generation = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 const GENERATION_CONFIG = {
   1: {
@@ -52,6 +52,24 @@ const GENERATION_CONFIG = {
     endId: 721,
     count: 72,
   },
+  7: {
+    label: "第7世代",
+    startId: 722,
+    endId: 809,
+    count: 88,
+  },
+  8: {
+    label: "第8世代",
+    startId: 810,
+    endId: 905,
+    count: 96,
+  },
+  9: {
+    label: "第9世代",
+    startId: 906,
+    endId: 1025,
+    count: 120,
+  },
 } as const;
 
 export function ModernPokedex() {
@@ -62,7 +80,7 @@ export function ModernPokedex() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [allPokemonForSearch, setAllPokemonForSearch] = useState<PokemonWithJapaneseName[]>([]);
 
   // 表示するポケモンリスト（検索機能を削除したので直接使用）
@@ -202,41 +220,47 @@ export function ModernPokedex() {
       {/* ヘッダー */}
       <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
-          {/* プルダウンメニュー - 世代選択 */}
+          {/* ポップアップボタン - 世代選択 */}
           <div className="relative">
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              onClick={() => setIsPopupOpen(!isPopupOpen)}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <span className="font-medium">{GENERATION_CONFIG[currentGeneration].label}</span>
-              <ChevronDown className="w-4 h-4 text-gray-600" />
+              <LayoutGrid className="w-4 h-4 text-gray-600" />
             </button>
 
-            {isDropdownOpen && (
+            {isPopupOpen && (
               <>
                 {/* オーバーレイ */}
                 <div
                   className="fixed inset-0 z-10"
-                  onClick={() => setIsDropdownOpen(false)}
+                  onClick={() => setIsPopupOpen(false)}
                 />
 
-                {/* メニュー */}
-                <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[160px] max-h-60 overflow-auto">
-                  {([1, 2, 3, 4, 5, 6] as const).map((gen) => (
-                    <button
-                      key={gen}
-                      onClick={() => {
-                        handleGenerationChange(gen);
-                        setIsDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center justify-between px-4 py-2 hover:bg-gray-100 transition-colors text-left"
-                    >
-                      <span className="font-medium">{GENERATION_CONFIG[gen].label}</span>
-                      {currentGeneration === gen && (
-                        <Check className="w-4 h-4 text-blue-500" />
-                      )}
-                    </button>
-                  ))}
+                {/* ポップアップ */}
+                <div className="absolute left-0 top-full mt-2 z-20 bg-white border border-gray-200 rounded-lg shadow-xl w-80 p-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">世代を選択</h3>
+
+                  {/* グリッド */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {([1, 2, 3, 4, 5, 6, 7, 8, 9] as const).map((gen) => (
+                      <button
+                        key={gen}
+                        onClick={() => {
+                          handleGenerationChange(gen);
+                          setIsPopupOpen(false);
+                        }}
+                        className={`px-3 py-2 rounded-md font-medium transition-all text-center ${
+                          currentGeneration === gen
+                            ? "bg-blue-500 text-white shadow-sm"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {GENERATION_CONFIG[gen].label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </>
             )}
