@@ -1,28 +1,29 @@
-# ポケモン世代選択機能 設計書
+# ポケモン世代選択機能 拡張設計書（プルダウン版）
 
 ## 概要
-ポケモン図鑑に世代選択機能を追加し、第1世代と第2世代のポケモンを切り替えて表示できるようにする。
+ポケモン図鑑の世代選択機能を拡張し、第1世代から第6世代までのポケモンをプルダウンメニューで切り替えて表示できるようにする。
 
 ## 要件
 
 ### 機能要件
-- 第1世代（1-151）と第2世代（152-251）のポケモンをAPIから取得
-- 画面右上に世代選択ボタンを配置
-- ボタンをクリックして世代を切り替え
+- 第1世代（1-151）、第2世代（152-251）、第3世代（252-386）、第4世代（387-493）、第5世代（494-649）、第6世代（650-721）のポケモンをAPIから取得
+- **プルダウンボタン**で世代選択UIを実装
+- 選択ボタンを押すことで世代の切り替えが可能
 - 世代切り替え時は、選択した世代のポケモンのみを表示
 - 検索機能も選択中の世代のポケモンのみを対象とする
-- 画面上部の「ポケモン図鑑」タイトルと虫眼鏡アイコンを削除
-- 世代選択ボタンと検索機能は統合（ボタンの横に検索アイコンを配置）
+- 出力状態（表示形式）は変更なし
 
 ### UI/UX要件
-- 世代選択は2つのボタン（「第1世代」「第2世代」）で切り替え
-- 選択中の世代のボタンはアクティブ状態を表示
+- 世代選択はプルダウンメニューで実装（「第1世代」〜「第6世代」）
+- プルダウンボタンには現在選択中の世代を表示
+- メニューを開くと全世代の選択肢が表示される
+- 選択中の世代にはチェックマークを表示
 - 世代切り替え時は選択中のポケモンをリセットし、新しい世代の最初のポケモンを表示
 - ローディング状態を表示
 - レスポンシブ対応
 
 ### 非機能要件
-- **テストは厳格に**: 世代切り替え時に1世代と2世代のポケモンが混ざらないように取得・表示
+- **テストは厳格に**: 世代切り替え時に他の世代のポケモンが混ざらないように取得・表示
 - パフォーマンス: 世代切り替え時のローディングは最小限に
 - データの一貫性: 世代ごとに完全にデータをクリアして再取得
 
@@ -31,7 +32,7 @@
 ### ポケモン世代の定義
 
 ```typescript
-type Generation = 1 | 2;
+type Generation = 1 | 2 | 3 | 4 | 5 | 6;
 
 const GENERATION_CONFIG = {
   1: {
@@ -46,238 +47,166 @@ const GENERATION_CONFIG = {
     endId: 251,
     count: 100,
   },
+  3: {
+    label: "第3世代",
+    startId: 252,
+    endId: 386,
+    count: 135,
+  },
+  4: {
+    label: "第4世代",
+    startId: 387,
+    endId: 493,
+    count: 107,
+  },
+  5: {
+    label: "第5世代",
+    startId: 494,
+    endId: 649,
+    count: 156,
+  },
+  6: {
+    label: "第6世代",
+    startId: 650,
+    endId: 721,
+    count: 72,
+  },
 } as const;
 ```
 
-### 状態管理
+### プルダウンメニューの設計
 
-**ModernPokedex** (`src/app/page.tsx`):
+プルダウンメニューは、以下の特徴を持つUIコンポーネント：
+- 省スペース：6つの選択肢をコンパクトに表示
+- 現在の選択がボタンに表示される
+- クリックでメニューが開き、全選択肢が表示される
+- 選択中の項目にチェックマーク表示
+- キーボードナビゲーション対応
 
-新しい状態:
-```typescript
-const [currentGeneration, setCurrentGeneration] = useState<Generation>(1);
-```
+#### プルダウンメニューのスタイル仕様
 
-既存の状態:
-- `pokemonList`: 世代切り替え時にクリア
-- `selectedPokemon`: 世代切り替え時にクリア
-- `allPokemonForSearch`: 世代ごとに再取得
+**トリガーボタン**:
+- 背景: 白（bg-white）
+- ボーダー: グレー（border border-gray-300）
+- パディング: px-4 py-2
+- 角丸: rounded-lg
+- アイコン: ChevronDown（下向き矢印）
+- ホバー時: 軽いグレー背景
 
-### データフロー
+**メニュー**:
+- 背景: 白（bg-white）
+- シャドウ: shadow-lg
+- ボーダー: border border-gray-200
+- 角丸: rounded-lg
+- 最大高さ: max-h-60
+- オーバーフロー: overflow-auto
 
-#### 初期読み込み
-1. デフォルトで第1世代を選択
-2. 第1世代のポケモン24匹を取得
-3. 最初のポケモンを自動選択
-4. 検索用に第1世代の全ポケモン（151匹）を取得
-
-#### 世代切り替え時
-1. ユーザーが世代選択ボタンをクリック
-2. `currentGeneration` を更新
-3. **全ての既存データをクリア**:
-   - `pokemonList` を null に
-   - `selectedPokemon` を null に
-   - `allPokemonForSearch` を空配列に
-4. 選択した世代のポケモン24匹を取得
-5. 最初のポケモンを自動選択
-6. 検索用に選択した世代の全ポケモンを取得
+**メニュー項目**:
+- パディング: px-4 py-2
+- ホバー時: 背景色変更（bg-gray-100）
+- 選択中: チェックマークアイコン表示
+- トランジション: スムーズなアニメーション
 
 ### UI構造
 
 ```
 ModernPokedex
-├── Header (修正)
-│   ├── Generation Selector (新規)
-│   │   ├── Button "第1世代" (active if gen === 1)
-│   │   └── Button "第2世代" (active if gen === 2)
-│   └── Search Icon Button (移動)
-├── SearchModal (既存 - 世代対応)
-└── Main Content (既存)
+├── Header
+│   ├── Dropdown Menu（世代選択）
+│   │   ├── Trigger Button（現在選択中の世代を表示）
+│   │   └── Menu Content
+│   │       ├── MenuItem "第1世代"
+│   │       ├── MenuItem "第2世代"
+│   │       ├── MenuItem "第3世代"
+│   │       ├── MenuItem "第4世代"
+│   │       ├── MenuItem "第5世代"
+│   │       └── MenuItem "第6世代"
+│   └── Search Icon Button
+├── SearchModal（世代対応）
+└── Main Content
 ```
 
 ### 実装ファイル
 
 #### 修正
 - `src/app/page.tsx`:
-  - ヘッダーUIの修正（タイトル削除、世代選択ボタン追加）
-  - 世代選択の状態管理
-  - 世代切り替えロジック
-  - データ取得処理の世代対応
+  - `Generation` 型を `1 | 2 | 3 | 4 | 5 | 6` に拡張
+  - `GENERATION_CONFIG` に第5世代と第6世代を追加
+  - Segmented Controlをプルダウンメニューに置き換え
 
 #### 新規作成
-- なし（既存コンポーネントの修正のみ）
-
-### API呼び出しの修正
-
-#### 現在の実装
-```typescript
-// 初期読み込み: 0から24匹取得
-await pokemonService.getPokemonList(24, 0);
-
-// 検索用: 0から151匹取得
-await pokemonService.getPokemonList(151, 0);
-```
-
-#### 修正後
-```typescript
-// 初期読み込み: 世代に応じたoffsetとlimit
-const config = GENERATION_CONFIG[currentGeneration];
-await pokemonService.getPokemonList(24, config.startId - 1);
-
-// 検索用: 世代の全ポケモンを取得
-await pokemonService.getPokemonList(config.count, config.startId - 1);
-```
-
-### 世代切り替えハンドラー
-
-```typescript
-const handleGenerationChange = useCallback(async (generation: Generation) => {
-  if (generation === currentGeneration) return;
-
-  try {
-    // 全データをクリア（世代が混ざらないようにする）
-    setPokemonList(null);
-    setSelectedPokemon(null);
-    setAllPokemonForSearch([]);
-
-    // 世代を更新
-    setCurrentGeneration(generation);
-
-    setIsLoadingList(true);
-
-    const config = GENERATION_CONFIG[generation];
-    const data = await pokemonService.getPokemonList(24, config.startId - 1);
-    setPokemonList(data);
-
-    if (data.results.length > 0) {
-      await handlePokemonSelect(data.results[0].url);
-    }
-
-    // 検索用の全ポケモンを取得
-    const allData = await pokemonService.getPokemonList(config.count, config.startId - 1);
-    const pokemonWithJapanese = await Promise.all(
-      allData.results.map(async (pokemon) => {
-        const id = pokemonService.extractIdFromResourceUrl(pokemon.url);
-        if (!id) return { ...pokemon, japaneseName: pokemon.name };
-
-        try {
-          const japaneseName = await pokemonService.getPokemonNameInJapanese(id);
-          return { ...pokemon, japaneseName };
-        } catch (error) {
-          return { ...pokemon, japaneseName: pokemon.name };
-        }
-      })
-    );
-
-    setAllPokemonForSearch(pokemonWithJapanese);
-  } catch (error) {
-    console.error('世代切り替えに失敗しました:', error);
-  } finally {
-    setIsLoadingList(false);
-  }
-}, [currentGeneration, handlePokemonSelect]);
-```
-
-### 「もっと見る」ボタンの修正
-
-世代の範囲を超えないように制御:
-
-```typescript
-const handleLoadMore = useCallback(async () => {
-  if (!pokemonList || isLoadingMore) return;
-
-  const config = GENERATION_CONFIG[currentGeneration];
-  const lastPokemon = pokemonList.results[pokemonList.results.length - 1];
-  const lastPokemonId = pokemonService.extractIdFromResourceUrl(lastPokemon.url);
-
-  if (!lastPokemonId) return;
-
-  // 世代の範囲を超えている場合は読み込まない
-  if (lastPokemonId >= config.endId) return;
-
-  // 次の24体を取得（世代の範囲内に制限）
-  const remainingCount = config.endId - lastPokemonId;
-  const loadCount = Math.min(24, remainingCount);
-
-  const newData = await pokemonService.getPokemonList(loadCount, lastPokemonId);
-
-  setPokemonList({
-    count: newData.count,
-    next: lastPokemonId + loadCount < config.endId ? newData.next : null,
-    previous: pokemonList.previous,
-    results: [...pokemonList.results, ...newData.results]
-  });
-}, [pokemonList, isLoadingMore, currentGeneration]);
-```
-
-## UI設計
+- なし（既存コンポーネントの修正のみ、シンプルなプルダウンを実装）
 
 ### ヘッダーレイアウト
 
-**修正前**:
+**修正前（Segmented Control）**:
 ```
-┌────────────────────────────────────────┐
-│ ポケモン図鑑              [🔍]        │
-└────────────────────────────────────────┘
-```
-
-**修正後**:
-```
-┌────────────────────────────────────────┐
-│         [第1世代] [第2世代]     [🔍]  │
-└────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│ ┌─────────────────────────────────────────┐        [🔍] │
+│ │ 第1世代 │ 第2世代 │ 第3世代 │ 第4世代 │              │
+│ └─────────────────────────────────────────┘              │
+└──────────────────────────────────────────────────────────┘
 ```
 
-### 世代選択ボタンのスタイル
+**修正後（プルダウン）**:
+```
+┌──────────────────────────────────────────┐
+│ [第1世代 ▼]                       [🔍] │
+└──────────────────────────────────────────┘
+     │
+     ├─ 第1世代 ✓
+     ├─ 第2世代
+     ├─ 第3世代
+     ├─ 第4世代
+     ├─ 第5世代
+     └─ 第6世代
+```
 
-**非選択時**:
-- 背景: 白または薄いグレー
-- 文字色: グレー
-- ボーダー: グレー
+## 実装コード
 
-**選択時**:
-- 背景: 青色（bg-blue-500）
-- 文字色: 白
-- ボーダー: 青色
-- シャドウ: 軽いシャドウ
+### プルダウンメニューの実装（page.tsx内）
 
-## 実装手順
+```tsx
+{/* プルダウンメニュー - 世代選択 */}
+<div className="relative">
+  <button
+    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+  >
+    <span className="font-medium">{GENERATION_CONFIG[currentGeneration].label}</span>
+    <ChevronDown className="w-4 h-4 text-gray-600" />
+  </button>
 
-1. **定数の定義**
-   - `GENERATION_CONFIG` を定義
-   - `Generation` 型を定義
+  {isDropdownOpen && (
+    <>
+      {/* オーバーレイ */}
+      <div
+        className="fixed inset-0 z-10"
+        onClick={() => setIsDropdownOpen(false)}
+      />
 
-2. **状態管理の追加**
-   - `currentGeneration` state を追加
-
-3. **ヘッダーUIの修正**
-   - 「ポケモン図鑑」タイトルを削除
-   - 世代選択ボタンを追加
-   - 検索アイコンを右側に移動
-
-4. **世代切り替えハンドラーの実装**
-   - `handleGenerationChange` を実装
-   - データクリア処理
-   - 新しい世代のデータ取得
-
-5. **初期読み込み処理の修正**
-   - 世代に応じたoffsetを使用
-   - `currentGeneration` に依存
-
-6. **検索用データ取得の修正**
-   - 世代に応じたcount/offsetを使用
-   - `currentGeneration` に依存
-
-7. **「もっと見る」ボタンの修正**
-   - 世代の範囲チェック
-   - 残りのポケモン数を計算
-
-8. **テスト**
-   - 第1世代の表示確認（1-151のみ）
-   - 第2世代の表示確認（152-251のみ）
-   - 世代切り替え時にデータが混ざらないことを確認
-   - 検索機能が世代に応じて動作することを確認
-   - 「もっと見る」ボタンが世代の範囲内で動作することを確認
+      {/* メニュー */}
+      <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[160px] max-h-60 overflow-auto">
+        {([1, 2, 3, 4, 5, 6] as const).map((gen) => (
+          <button
+            key={gen}
+            onClick={() => {
+              handleGenerationChange(gen);
+              setIsDropdownOpen(false);
+            }}
+            className="w-full flex items-center justify-between px-4 py-2 hover:bg-gray-100 transition-colors text-left"
+          >
+            <span className="font-medium">{GENERATION_CONFIG[gen].label}</span>
+            {currentGeneration === gen && (
+              <Check className="w-4 h-4 text-blue-500" />
+            )}
+          </button>
+        ))}
+      </div>
+    </>
+  )}
+</div>
+```
 
 ## テスト方針
 
@@ -286,6 +215,10 @@ const handleLoadMore = useCallback(async () => {
 1. **世代の分離**
    - 第1世代選択時: ID 1-151 のみ表示
    - 第2世代選択時: ID 152-251 のみ表示
+   - 第3世代選択時: ID 252-386 のみ表示
+   - 第4世代選択時: ID 387-493 のみ表示
+   - 第5世代選択時: ID 494-649 のみ表示
+   - 第6世代選択時: ID 650-721 のみ表示
    - 世代切り替え時に前の世代のデータが残らない
 
 2. **データの一貫性**
@@ -294,27 +227,84 @@ const handleLoadMore = useCallback(async () => {
    - 「もっと見る」で追加されるポケモンも選択中の世代
 
 3. **境界値のテスト**
-   - 第1世代の最後（No.151 フシギバナ系統の最終進化）
+   - 第1世代の最後（No.151 ミュウ）
    - 第2世代の最初（No.152 チコリータ）
    - 第2世代の最後（No.251 セレビィ）
+   - 第3世代の最初（No.252 キモリ）
+   - 第3世代の最後（No.386 デオキシス）
+   - 第4世代の最初（No.387 ナエトル）
+   - 第4世代の最後（No.493 アルセウス）
+   - 第5世代の最初（No.494 ツタージャ）
+   - 第5世代の最後（No.649 ゲノセクト）
+   - 第6世代の最初（No.650 ハリマロン）
+   - 第6世代の最後（No.721 ボルケニオン）
 
 4. **状態管理のテスト**
    - 世代切り替え時に選択中のポケモンがリセットされる
    - 世代切り替え時にリストがクリアされる
    - 世代切り替え時に検索用データがクリアされる
 
+5. **UI動作のテスト**
+   - プルダウンメニューの開閉が正しく動作する
+   - 選択中の世代にチェックマークが表示される
+   - メニュー外クリックでメニューが閉じる
+   - 同じ世代を再選択しても無駄な処理が走らない
+   - ローディング中は適切な表示がされる
+
+## 実装手順
+
+1. **型定義の拡張**
+   - `Generation` 型を `1 | 2 | 3 | 4 | 5 | 6` に変更
+
+2. **世代設定の追加**
+   - `GENERATION_CONFIG` に第5世代と第6世代を追加
+
+3. **状態管理の追加**
+   - `isDropdownOpen` state を追加
+
+4. **プルダウンメニューの実装**
+   - Segmented Controlをプルダウンメニューに置き換え
+   - トリガーボタンの実装
+   - メニュー項目を動的に生成（mapを使用）
+   - オーバーレイとメニュー外クリックの処理
+
+5. **必要なアイコンのimport**
+   - `ChevronDown` をlucide-reactからimport
+   - `Check` をlucide-reactからimport
+
+6. **動作確認**
+   - 各世代を選択して正しく切り替わるか確認
+   - 世代ごとのポケモンIDが正しい範囲内か確認
+   - データが混ざらないか確認
+
+7. **型チェックとリント**
+   - `npm run typecheck` を実行
+   - `npm run lint` を実行
+
 ## 注意事項
 
 - 世代切り替え時は必ず全データをクリアしてから新しいデータを取得
-- `useEffect` の依存配列に `currentGeneration` を追加
+- `useEffect` の依存配列に `currentGeneration` を追加（既に実装済み）
 - API呼び出しのoffsetは `startId - 1`（PokeAPIは0始まり）
-- 第2世代は100匹（152-251）
+- 既存の世代切り替えロジック（`handleGenerationChange`）はそのまま使用可能
+- プルダウンメニューは `z-index` を適切に設定し、他の要素の上に表示
+- メニュー外クリックでメニューを閉じる処理を実装
 - エラーハンドリングを適切に実装
 - ローディング状態を適切に管理
 
 ## 将来の拡張性
 
-将来的に第3世代以降を追加する場合:
+将来的に第7世代以降を追加する場合:
 - `GENERATION_CONFIG` に新しい世代を追加
-- `Generation` 型を拡張（`type Generation = 1 | 2 | 3 | ...`）
-- UIのボタンを動的に生成するように修正（ハードコードを避ける）
+- `Generation` 型を拡張（`type Generation = 1 | 2 | ... | 7 | ...`）
+- プルダウンメニューのmap配列に世代番号を追加
+- 世代が増えてもプルダウン形式なら省スペースで対応可能
+
+## まとめ
+
+この実装により：
+- ユーザーは第1世代から第6世代までのポケモンをシームレスに切り替えられる
+- プルダウンメニューにより、省スペースで6つの選択肢を提供
+- 既存の世代切り替えロジックを活用し、データの混在を確実に防ぐ
+- テストは厳格に行い、世代間でデータが混ざらないことを保証
+- 第5世代と第6世代の新しいポケモンも正しく表示できる

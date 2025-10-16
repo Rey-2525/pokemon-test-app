@@ -7,13 +7,13 @@ import { PokemonHeroDisplay } from "../components/PokemonHeroDisplay";
 import { SearchModal } from "../components/SearchModal";
 import { pokemonService, type PokemonDetailWithJapanese } from "@/services/pokemonService";
 import type { PokemonListResponse, NamedAPIResource } from "@/api/pokemon.api";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, ChevronDown, Check } from "lucide-react";
 
 type PokemonWithJapaneseName = NamedAPIResource & {
   japaneseName?: string;
 };
 
-type Generation = 1 | 2;
+type Generation = 1 | 2 | 3 | 4 | 5 | 6;
 
 const GENERATION_CONFIG = {
   1: {
@@ -28,6 +28,30 @@ const GENERATION_CONFIG = {
     endId: 251,
     count: 100,
   },
+  3: {
+    label: "第3世代",
+    startId: 252,
+    endId: 386,
+    count: 135,
+  },
+  4: {
+    label: "第4世代",
+    startId: 387,
+    endId: 493,
+    count: 107,
+  },
+  5: {
+    label: "第5世代",
+    startId: 494,
+    endId: 649,
+    count: 156,
+  },
+  6: {
+    label: "第6世代",
+    startId: 650,
+    endId: 721,
+    count: 72,
+  },
 } as const;
 
 export function ModernPokedex() {
@@ -38,6 +62,7 @@ export function ModernPokedex() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [allPokemonForSearch, setAllPokemonForSearch] = useState<PokemonWithJapaneseName[]>([]);
 
   // 表示するポケモンリスト（検索機能を削除したので直接使用）
@@ -177,28 +202,44 @@ export function ModernPokedex() {
       {/* ヘッダー */}
       <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
-          {/* 世代選択ボタン */}
-          <div className="flex gap-2">
+          {/* プルダウンメニュー - 世代選択 */}
+          <div className="relative">
             <button
-              onClick={() => handleGenerationChange(1)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                currentGeneration === 1
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              第1世代
+              <span className="font-medium">{GENERATION_CONFIG[currentGeneration].label}</span>
+              <ChevronDown className="w-4 h-4 text-gray-600" />
             </button>
-            <button
-              onClick={() => handleGenerationChange(2)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                currentGeneration === 2
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              第2世代
-            </button>
+
+            {isDropdownOpen && (
+              <>
+                {/* オーバーレイ */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setIsDropdownOpen(false)}
+                />
+
+                {/* メニュー */}
+                <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[160px] max-h-60 overflow-auto">
+                  {([1, 2, 3, 4, 5, 6] as const).map((gen) => (
+                    <button
+                      key={gen}
+                      onClick={() => {
+                        handleGenerationChange(gen);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-2 hover:bg-gray-100 transition-colors text-left"
+                    >
+                      <span className="font-medium">{GENERATION_CONFIG[gen].label}</span>
+                      {currentGeneration === gen && (
+                        <Check className="w-4 h-4 text-blue-500" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* 検索ボタン */}
