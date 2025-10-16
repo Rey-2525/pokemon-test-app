@@ -18,7 +18,7 @@ export function StatBar({ label, value, maxValue = 255, color = "#3b82f6" }: Sta
           value={percentage}
           className="h-2"
           style={{
-            // @ts-ignore - CSS variable override
+            // @ts-expect-error - CSS variable override
             "--progress-background": color,
           }}
         />
