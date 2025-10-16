@@ -1,7 +1,12 @@
+"use client";
+
+import { useState } from "react";
+import { Info } from "lucide-react";
 import { Badge } from "./ui/badge";
 import type { PokemonDetailWithJapanese } from "@/services/pokemonService";
 import { getTypeColor, capitalizeFirstLetter, formatPokemonId, getTypeNameInJapanese } from "@/utils/pokemonNameMap";
 import { ImageWithFallback } from "./ImageWithFallback";
+import { PokemonDetailModal } from "./PokemonDetailModal";
 
 type PokemonHeroDisplayProps = {
   pokemon: PokemonDetailWithJapanese | null;
@@ -10,6 +15,8 @@ type PokemonHeroDisplayProps = {
 export function PokemonHeroDisplay({
   pokemon,
 }: PokemonHeroDisplayProps) {
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
   if (!pokemon) {
     return (
       <div className="flex items-center justify-center h-full bg-white">
@@ -25,60 +32,85 @@ export function PokemonHeroDisplay({
 
   const paddedId = formatPokemonId(pokemon.id);
 
+  // Info iconクリック時のハンドラー
+  const handleInfoClick = () => {
+    setIsDetailModalOpen(true);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-white">
-      {/* ポケモン画像 */}
-      <div className="relative mb-6">
-        <div className="w-48 h-48 mx-auto mb-4 rounded-full bg-gray-50 p-4 shadow-lg">
-          <ImageWithFallback
-            src={
-              pokemon.sprites.other?.["official-artwork"]?.front_default || ""
-            }
-            fallbackSrc={pokemon.sprites.front_default || ""}
-            alt={pokemon.name}
-            className="w-full h-full object-contain drop-shadow-2xl"
-          />
+    <>
+      <div className="relative flex flex-col items-center justify-center h-full p-6 text-center bg-white">
+        {/* Info Icon Button - 右上 */}
+        <button
+          onClick={handleInfoClick}
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 transition-colors z-10"
+          aria-label="詳細情報を表示"
+        >
+          <Info className="w-6 h-6 text-gray-600" />
+        </button>
+
+        {/* ポケモン画像 */}
+        <div className="relative mb-6">
+          <div className="w-48 h-48 mx-auto mb-4 rounded-full bg-gray-50 p-4 shadow-lg">
+            <ImageWithFallback
+              src={
+                pokemon.sprites.other?.["official-artwork"]?.front_default || ""
+              }
+              fallbackSrc={pokemon.sprites.front_default || ""}
+              alt={pokemon.name}
+              className="w-full h-full object-contain drop-shadow-2xl"
+            />
+          </div>
+
         </div>
 
+        {/* ポケモン基本情報 */}
+        <div className="space-y-4">
+          <div>
+            <p className="text-gray-600 text-lg mb-1">No.{paddedId}</p>
+            <h1 className="text-gray-800 text-4xl mb-4">
+              {pokemon.japaneseName || capitalizeFirstLetter(pokemon.name)}
+            </h1>
+          </div>
+
+          {/* タイプ */}
+          <div className="flex justify-center gap-2 mb-4">
+            {pokemon.types.map((typeInfo) => (
+              <Badge
+                key={typeInfo.type.name}
+                className="px-4 py-2 text-white border-0"
+                style={{
+                  backgroundColor: getTypeColor(typeInfo.type.name),
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                }}
+              >
+                {getTypeNameInJapanese(typeInfo.type.name)}
+              </Badge>
+            ))}
+          </div>
+
+          {/* 基本データ */}
+          <div className="flex justify-center gap-8 text-gray-700">
+            <div className="text-center">
+              <p className="text-gray-500 text-sm mb-1">身長</p>
+              <p className="text-xl">{(pokemon.height / 10).toFixed(1)}m</p>
+            </div>
+            <div className="text-center">
+              <p className="text-gray-500 text-sm mb-1">体重</p>
+              <p className="text-xl">{(pokemon.weight / 10).toFixed(1)}kg</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ポケモン基本情報 */}
-      <div className="space-y-4">
-        <div>
-          <p className="text-gray-600 text-lg mb-1">No.{paddedId}</p>
-          <h1 className="text-gray-800 text-4xl mb-4">
-            {pokemon.japaneseName || capitalizeFirstLetter(pokemon.name)}
-          </h1>
-        </div>
-
-        {/* タイプ */}
-        <div className="flex justify-center gap-2 mb-4">
-          {pokemon.types.map((typeInfo) => (
-            <Badge
-              key={typeInfo.type.name}
-              className="px-4 py-2 text-white border-0"
-              style={{
-                backgroundColor: getTypeColor(typeInfo.type.name),
-                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-              }}
-            >
-              {getTypeNameInJapanese(typeInfo.type.name)}
-            </Badge>
-          ))}
-        </div>
-
-        {/* 基本データ */}
-        <div className="flex justify-center gap-8 text-gray-700">
-          <div className="text-center">
-            <p className="text-gray-500 text-sm mb-1">身長</p>
-            <p className="text-xl">{(pokemon.height / 10).toFixed(1)}m</p>
-          </div>
-          <div className="text-center">
-            <p className="text-gray-500 text-sm mb-1">体重</p>
-            <p className="text-xl">{(pokemon.weight / 10).toFixed(1)}kg</p>
-          </div>
-        </div>
-      </div>
-    </div>
+      {/* 詳細モーダル */}
+      {pokemon && (
+        <PokemonDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={() => setIsDetailModalOpen(false)}
+          pokemon={pokemon}
+        />
+      )}
+    </>
   );
 }
